@@ -1,40 +1,184 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NEXORA Kids</title>
 <style>
-body {
-  background: #101827;
-  color: white;
-  font-family: Arial;
-  text-align: center;
-  padding: 30px;
-}
-h1 { color: #38d9ff; }
-.card {
-  background: #1e293b;
-  padding: 25px;
-  border-radius: 15px;
-}
-button {
-  background: #06b6d4;
-  padding: 14px;
-  border: 0;
-  border-radius: 10px;
-  margin: 10px;
-  color: white;
-  font-size: 17px;
-}
+*{box-sizing:border-box}
+body{margin:0;background:#101827;color:white;font-family:Arial,sans-serif;padding:20px}
+.container{max-width:650px;margin:auto}
+header{text-align:center;padding:15px}
+h1{color:#38bdf8;margin-bottom:5px}
+.subtitle{color:#94a3b8}
+.card{background:#1e293b;padding:20px;border-radius:15px;margin:15px 0}
+h2{color:#38bdf8;margin-top:0}
+button{background:#06b6d4;color:#00111b;border:0;padding:13px 17px;border-radius:9px;font-weight:bold;cursor:pointer;margin:5px}
+button.secondary{background:#475569;color:white}
+input{padding:12px;border-radius:8px;border:1px solid #475569;background:#0f172a;color:white;width:100%;margin:8px 0}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.tabs button{flex:1}
+.stat{font-size:28px;font-weight:bold;color:#38bdf8}
+.muted{color:#94a3b8}
+.status{color:#fbbf24;font-weight:bold}
+.code{font-size:30px;letter-spacing:6px;color:#4ade80;font-weight:bold;text-align:center;padding:15px}
+.hidden{display:none}
+.progress{height:12px;background:#334155;border-radius:10px;overflow:hidden}
+.bar{height:100%;width:0;background:#06b6d4}
+footer{text-align:center;color:#64748b;font-size:12px;padding:20px}
 </style>
 </head>
 <body>
+<div class="container">
+
+<header>
+<h1>🛡️ NEXORA Kids</h1>
+<div class="subtitle">Parent & Child Safety Dashboard</div>
+</header>
+
 <div class="card">
-<h1>NEXORA Kids</h1>
-<h3>Parent & Child Safety</h3>
-<p>Welcome to NEXORA Kids</p>
-<button onclick="alert('Parent Panel')">Parent</button>
-<button onclick="alert('Child Panel')">Child</button>
+<h2>Welcome to NEXORA Kids</h2>
+<div class="tabs">
+<button onclick="showPage('parent')">Parent Panel</button>
+<button onclick="showPage('child')">Child Panel</button>
 </div>
+</div>
+
+<section id="parent">
+
+<div class="card">
+<h2>👨‍👩‍👧 Parent Dashboard</h2>
+<p class="muted">Manage your child's connection and screen time.</p>
+<p>Child Connection: <span class="status" id="connection">Not Connected</span></p>
+</div>
+
+<div class="card">
+<h2>🔐 Child Pairing</h2>
+<p class="muted">Generate a code for demo pairing.</p>
+<div class="code" id="pairCode">------</div>
+<button onclick="generateCode()">Generate Pairing Code</button>
+<button class="secondary" onclick="copyCode()">Copy Code</button>
+<p class="muted" id="codeMessage">No code generated yet.</p>
+</div>
+
+<div class="card">
+<h2>⏱️ Screen Time Dashboard</h2>
+<p>Today's screen time</p>
+<div class="stat" id="screenTime">0 minutes</div>
+<div class="progress"><div class="bar" id="progressBar"></div></div>
+<p class="muted">Daily limit: <span id="limitText">120</span> minutes</p>
+<label>Set daily limit (minutes)</label>
+<input type="number" id="dailyLimit" value="120" min="1">
+<button onclick="saveLimit()">Save Limit</button>
+<br><br>
+<label>Enter screen time for demo (minutes)</label>
+<input type="number" id="timeInput" min="0" value="0">
+<button onclick="saveTime()">Update Screen Time</button>
+</div>
+
+<div class="card">
+<h2>📊 Activity Summary</h2>
+<p id="summary">No screen time recorded yet.</p>
+<button class="secondary" onclick="resetData()">Reset Demo Data</button>
+</div>
+
+</section>
+
+<section id="child" class="hidden">
+
+<div class="card">
+<h2>👦 Child Panel</h2>
+<p class="muted">Enter the pairing code shared by your parent.</p>
+<input id="childCode" placeholder="Enter 6-digit pairing code" maxlength="6" inputmode="numeric">
+<button onclick="connectChild()">Connect</button>
+<p id="childMessage" class="status">Not connected</p>
+</div>
+
+<div class="card">
+<h2>🛡️ Safety</h2>
+<p class="muted">This demo shows the pairing interface only. Real device connection requires a secure backend and a separate child app.</p>
+</div>
+
+</section>
+
+<footer>NEXORA Kids • Family Safety Demo</footer>
+</div>
+
+<script>
+const get = key => localStorage.getItem(key);
+const set = (key,value) => localStorage.setItem(key,value);
+
+function showPage(page){
+document.getElementById('parent').classList.toggle('hidden',page!=='parent');
+document.getElementById('child').classList.toggle('hidden',page!=='child');
+}
+
+function generateCode(){
+const code=String(Math.floor(100000+Math.random()*900000));
+set('nexoraCode',code);
+document.getElementById('pairCode').textContent=code;
+document.getElementById('codeMessage').textContent='New pairing code generated.';
+}
+
+function copyCode(){
+const code=get('nexoraCode');
+if(!code){alert('Generate a code first');return;}
+if(navigator.clipboard){
+navigator.clipboard.writeText(code).then(()=>alert('Code copied!')).catch(()=>alert('Your code is '+code));
+}else{alert('Your code is '+code);}
+}
+
+function connectChild(){
+const entered=document.getElementById('childCode').value.trim();
+const saved=get('nexoraCode');
+if(saved && entered===saved){
+set('nexoraConnected','yes');
+document.getElementById('childMessage').textContent='Demo pairing successful!';
+updateDashboard();
+}else{
+document.getElementById('childMessage').textContent='Invalid code. Please check with your parent.';
+}
+}
+
+function saveLimit(){
+const value=Math.max(1,Number(document.getElementById('dailyLimit').value)||120);
+set('nexoraLimit',value);
+updateDashboard();
+}
+
+function saveTime(){
+const value=Math.max(0,Number(document.getElementById('timeInput').value)||0);
+set('nexoraTime',value);
+updateDashboard();
+}
+
+function resetData(){
+if(!confirm('Reset all demo data?'))return;
+['nexoraCode','nexoraConnected','nexoraLimit','nexoraTime'].forEach(k=>localStorage.removeItem(k));
+document.getElementById('pairCode').textContent='------';
+document.getElementById('timeInput').value=0;
+document.getElementById('dailyLimit').value=120;
+updateDashboard();
+}
+
+function updateDashboard(){
+const time=Number(get('nexoraTime')||0);
+const limit=Number(get('nexoraLimit')||120);
+const connected=get('nexoraConnected')==='yes';
+document.getElementById('screenTime').textContent=time+' minutes';
+document.getElementById('limitText').textContent=limit;
+document.getElementById('dailyLimit').value=limit;
+document.getElementById('timeInput').value=time;
+document.getElementById('progressBar').style.width=Math.min(100,time/limit*100)+'%';
+document.getElementById('connection').textContent=connected?'Demo Paired':'Not Connected';
+document.getElementById('connection').style.color=connected?'#4ade80':'#fbbf24';
+document.getElementById('summary').textContent=time===0?'No screen time recorded yet.':time+' minutes recorded today.';
+const code=get('nexoraCode');
+if(code)document.getElementById('pairCode').textContent=code;
+}
+
+updateDashboard();
+</script>
 </body>
 </html>
